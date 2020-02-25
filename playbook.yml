@@ -1,0 +1,23 @@
+---
+    - name: Build, run and tests tomcat sample app
+      hosts: localhost
+      tasks:
+        - name: Run pytest
+          command: "pytest"
+          register: result
+          ignore_errors: true
+        - debug:
+            msg: "Container is up and running."
+          when: "( '2 passed' in result.stdout )"
+
+        - debug:
+            msg: "Application is down... building and starting the container."
+          when: "( 'failed' in result.stdout )"
+        - command: "docker build -t tomcat ."
+          when: "( 'failed' in result.stdout )"
+        - command: "docker run -d --rm -p 8080:8080 tomcat"
+          when: "( 'failed' in result.stdout )"
+        
+        - pause:
+            seconds: 5
+          when: "( 'failed' in result.stdout )"
